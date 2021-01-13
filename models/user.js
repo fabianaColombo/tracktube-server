@@ -23,6 +23,11 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         allowNull: false,
       },
+      youtubeId: {
+        type: DataTypes.STRING,
+        unique: true,
+        allowNull: false,
+      },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
