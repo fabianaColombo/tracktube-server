@@ -9,8 +9,6 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       channel.belongsTo(models.user);
-      channel.hasMany(models.subscriberCountPerDay);
-      channel.belongsToMany(models.favoriteChannel);
     }
   }
   channel.init(
@@ -22,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       name: DataTypes.STRING,
       created: DataTypes.DATE,
       url: DataTypes.STRING,
-      description: DataTypes.STRING,
+      description: DataTypes.TEXT,
       country: DataTypes.STRING,
     },
     {

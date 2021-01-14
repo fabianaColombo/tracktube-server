@@ -5,12 +5,11 @@ module.exports = {
       id: {
         allowNull: false,
         autoIncrement: true,
-        primaryKey: false,
+        primaryKey: true,
         type: Sequelize.INTEGER,
       },
       channelId: {
         type: Sequelize.STRING,
-        primaryKey: true,
       },
       name: {
         type: Sequelize.STRING,
@@ -22,7 +21,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       description: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       country: {
         type: Sequelize.STRING,

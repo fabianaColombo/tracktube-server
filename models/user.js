@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       user.hasOne(models.channel);
-      user.belongsToMany(models.favoritechannel);
     }
   }
   user.init(
@@ -24,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         allowNull: false,
       },
-      youtubeId: {
+      channelId: {
         type: DataTypes.STRING,
         unique: true,
         allowNull: false,

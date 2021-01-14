@@ -17,7 +17,7 @@ module.exports = {
         unique: true,
         allowNull: false,
       },
-      youtubeId: {
+      channelId: {
         type: Sequelize.STRING,
         unique: true,
         allowNull: false,
