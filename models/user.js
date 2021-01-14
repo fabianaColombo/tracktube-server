@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       user.hasOne(models.channel);
-      user.belongsTo(models.favoritechannel);
+      user.belongsTo(models.favoriteChannel);
     }
   }
   user.init(
