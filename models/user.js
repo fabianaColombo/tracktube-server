@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       user.hasOne(models.channel);
+      user.belongsTo(models.favoritechannel);
     }
   }
   user.init(
@@ -24,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       channelId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         unique: true,
         allowNull: false,
       },
