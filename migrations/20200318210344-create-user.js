@@ -18,9 +18,13 @@ module.exports = {
         allowNull: false,
       },
       channelId: {
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
         unique: true,
         allowNull: false,
+        references: {
+          model: "channels",
+          key: "id",
+        },
       },
       password: {
         type: Sequelize.STRING,
