@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       channelId: DataTypes.STRING,
       count: DataTypes.INTEGER,
-      day: DataTypes.DATE,
+      day: DataTypes.STRING,
     },
     {
       sequelize,

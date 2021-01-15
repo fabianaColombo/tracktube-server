@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       name: DataTypes.STRING,
-      created: DataTypes.DATE,
+      created: DataTypes.STRING,
       url: DataTypes.STRING,
       description: DataTypes.TEXT,
       country: DataTypes.STRING,
