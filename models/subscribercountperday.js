@@ -8,9 +8,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      subscriberCountPerDay.belongsTo(models.channel, {
-        foreignKey: "channelId",
-      });
+      subscriberCountPerDay.belongsTo(models.channel);
     }
   }
   subscriberCountPerDay.init(

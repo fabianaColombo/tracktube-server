@@ -8,8 +8,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      favoriteChannel.hasMany(models.channel);
-      favoriteChannel.hasMany(models.user);
+      favoriteChannel.belongsTo(models.channel);
+      favoriteChannel.belongsTo(models.user);
     }
   }
   favoriteChannel.init(

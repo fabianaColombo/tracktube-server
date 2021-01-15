@@ -9,8 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      user.hasOne(models.channel);
-      user.belongsTo(models.favoriteChannel);
+      user.hasMany(models.favoriteChannel);
     }
   }
   user.init(
