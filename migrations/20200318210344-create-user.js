@@ -17,14 +17,10 @@ module.exports = {
         unique: true,
         allowNull: false,
       },
-      channelId: {
-        type: Sequelize.INTEGER,
+      youtubeId: {
+        type: Sequelize.STRING,
         unique: true,
         allowNull: false,
-        references: {
-          model: "channels",
-          key: "id",
-        },
       },
       password: {
         type: Sequelize.STRING,

@@ -23,8 +23,8 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         allowNull: false,
       },
-      channelId: {
-        type: DataTypes.INTEGER,
+      youtubeId: {
+        type: DataTypes.STRING,
         unique: true,
         allowNull: false,
       },

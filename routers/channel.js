@@ -6,6 +6,8 @@ const authMiddleware = require("../auth/middleware");
 
 const Channel = require("../models/").channel;
 const Subscriber = require("../models/").subscriberCountPerDay;
+const User = require("../models/").user;
+const Favorite = require("../models/").favoriteChannel;
 
 const router = new Router();
 
@@ -30,7 +32,7 @@ router.get("/explore", async (req, res) => {
   }
 });
 
-router.post("/saveChannelToFavorite", async (req, res) => {
+router.post("/saveChannelToFavorite", authMiddleware, async (req, res) => {
   try {
     const { id } = req.body;
 
@@ -43,8 +45,11 @@ router.post("/saveChannelToFavorite", async (req, res) => {
       const getChannel = await Axios.get(
         `${CHANNEL_API}?part=snippet%2Cstatistics&id=${id}&key=${KEY}`
       );
-
-      console.log("api response", getChannel.data.items[0].snippet.publishedAt);
+      //add error message for invalid youtube id
+      console.log(
+        "api response for channel",
+        getChannel.data.items[0].snippet.publishedAt
+      );
 
       const { items } = getChannel.data;
 
@@ -56,17 +61,23 @@ router.post("/saveChannelToFavorite", async (req, res) => {
         description: items[0].snippet.description,
         country: items[0].snippet.country,
       });
+      console.log("channel parsisted in DB", channel);
 
-      subscriberToday = await Subscriber.create({
-        channelId: idC,
+      const newChannelSubscriber = await Subscriber.create({
+        channelId: channel.id,
         count: items[0].statistics.subscriberCount,
         day: today,
       });
+      console.log("new channel subscriber", newChannelSubscriber);
 
-      // const subscriberCountNow = items[0].statistics.subscriberCount;
-      // console.log("subscriber count now", subscriberCountNow);
+      const newFavorite = await Favorite.create(
+        Object.assign({
+          userId: req.user.id,
+          channelId: channel.id,
+        })
+      );
+      console.log("favorite persisted to DB", newFavorite);
 
-      //add error message for invalid youtube id
       return res.status(200).send({ message: "ok" });
     }
 
@@ -77,14 +88,14 @@ router.post("/saveChannelToFavorite", async (req, res) => {
       where: { day: today, channelId: idC },
     });
 
-    console.log("subscriber", subscriberToday);
+    console.log("subscriber today already in DB", subscriberToday);
 
     if (!subscriberToday) {
       const getSubscriberCount = await Axios.get(
         `${CHANNEL_API}?part=snippet%2Cstatistics&id=${id}&key=${KEY}`
       );
       console.log(
-        "api response for subscriber",
+        "api response for subscriber today",
         getSubscriberCount.data.items[0].statistics.subscriberCount
       );
 
