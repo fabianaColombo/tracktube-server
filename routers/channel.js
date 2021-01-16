@@ -8,6 +8,7 @@ const Channel = require("../models/").channel;
 const Subscriber = require("../models/").subscriberCountPerDay;
 const User = require("../models/").user;
 const Favorite = require("../models/").favoriteChannel;
+const { Op } = require("sequelize");
 
 const router = new Router();
 
@@ -25,7 +26,7 @@ router.get("/explore", async (req, res) => {
       item.statistics.subscriberCount,
       today,
     ]);
-
+    res.status(200).send(data);
     console.log(data);
   } catch (e) {
     console.log(e.message);
@@ -70,12 +71,10 @@ router.post("/saveChannelToFavorite", authMiddleware, async (req, res) => {
       });
       console.log("new channel subscriber", newChannelSubscriber);
 
-      const newFavorite = await Favorite.create(
-        Object.assign({
-          userId: req.user.id,
-          channelId: channel.id,
-        })
-      );
+      const newFavorite = await Favorite.create({
+        userId: req.user.id,
+        channelId: channel.id,
+      });
       console.log("favorite persisted to DB", newFavorite);
 
       return res.status(200).send({ message: "ok" });
@@ -83,6 +82,7 @@ router.post("/saveChannelToFavorite", authMiddleware, async (req, res) => {
 
     let idC = channel.id;
     console.log("idC", idC);
+    console.log("userID", req.user.id);
 
     let subscriberToday = await Subscriber.findOne({
       where: { day: today, channelId: idC },
@@ -104,7 +104,22 @@ router.post("/saveChannelToFavorite", authMiddleware, async (req, res) => {
         count: getSubscriberCount.data.items[0].statistics.subscriberCount,
         day: today,
       });
-      return res.status(200).send({ message: "ok" });
+    }
+
+    let favoriteCheckDB = await Favorite.findOne({
+      where: { userId: { [Op.eq]: req.user.id }, channelId: idC },
+    });
+    console.log("channel was favorited before?", favoriteCheckDB);
+
+    if (!favoriteCheckDB) {
+      const newFavorite = await Favorite.create({
+        userId: req.user.id,
+        channelId: idC,
+      });
+      console.log("new favorite added", newFavorite);
+      return res.status(200).send({ message: "new channel added to favorite" });
+    } else {
+      return res.status(200).send({ message: "channel was already favorited" });
     }
   } catch (e) {
     console.log(e.message);
@@ -112,7 +127,23 @@ router.post("/saveChannelToFavorite", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/favoriteChannels");
+router.get("/favoriteChannels", authMiddleware, async (req, res) => {
+  try {
+    const favorites = await Favorite.findAll(
+      {
+        where: { userId: req.user.id },
+        order: [["createdAt", "ASC"]],
+        include: [Channel],
+      }.then()
+    );
+
+    res.status(200).send(favorites);
+  } catch (e) {
+    console.log(e.message);
+    res.status(500).send(e);
+  }
+});
+
 //check if there are favorites
 //return favorite channels (name) unclude subscriberPerDay table with count and day
 //make sure they are returned in the right format ["name", "count", "day"]
