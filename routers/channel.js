@@ -14,21 +14,24 @@ const router = new Router();
 
 const today = new Date().toISOString().split("T")[0];
 
-router.get("/explore", async (req, res) => {
+router.get("/explore/:id1/:id2/:id3", async (req, res, next) => {
   try {
-    const { id1, id2, id3 } = req.body;
+    const { id1, id2, id3 } = req.params;
+    //console.log("this is id one", req.params);
 
     const getChannel = await Axios.get(
       `${CHANNEL_API}?part=snippet%2Cstatistics&id=${id1}&id=${id2}&id=${id3}&key=${KEY}`
     );
-    const data = getChannel.data.items.map((item) => [
-      item.snippet.title,
-      item.statistics.subscriberCount,
-      today,
-    ]);
+    console.log("what is get channel", getChannel);
+    const data = getChannel.data.items.map((item) => ({
+      name: item.snippet.title,
+      data: [item.statistics.subscriberCount],
+      day: today,
+    }));
     res.status(200).send(data);
     console.log(data);
   } catch (e) {
+    next(e);
     console.log(e.message);
   }
 });
@@ -129,15 +132,49 @@ router.post("/saveChannelToFavorite", authMiddleware, async (req, res) => {
 
 router.get("/favoriteChannels", authMiddleware, async (req, res) => {
   try {
-    const favorites = await Favorite.findAll(
-      {
-        where: { userId: req.user.id },
-        order: [["createdAt", "ASC"]],
-        include: [Channel],
-      }.then()
-    );
+    let favorites = await Favorite.findAll({
+      where: { userId: req.user.id },
+      order: [["createdAt", "DESC"]],
+      include: [Channel],
+    });
+    // const favoriteChannelsRes = favorites.map((fav) => ({
+    //   favoriteId: fav.id,
+    //   channelName: fav.channel.name,
+    //   id: fav.channel.id,
+    //   youtubeId: fav.channel.youtubeId,
+    // }));
+    // res.status(200).send(favoriteChannelsRes);
 
-    res.status(200).send(favorites);
+    const favChannel = favorites.map((fav) => fav.channel.id);
+
+    let channels = await Channel.findAll({
+      where: { id: favChannel },
+      include: Subscriber,
+    });
+
+    let subscribers = await Subscriber.findAll({
+      where: { id: favChannel },
+      include: Channel,
+    });
+    //res.status(200).send(subscribers);
+    //console.log("subscribers", subscribers);
+
+    const channelWithSub = subscribers.count;
+    console.log(channelWithSub);
+    res.status(200).send(channelWithSub);
+    //console.log("this is channels", channels);
+    //console.log("this is subscribers", Subscriber.flat());
+
+    // const subCount = channels.forEach(channel => { channel}) =subscriberCountPerDay.;
+    // console.log("subcount", subCount);
+
+    // const favChannelWithSubscribers = channels.map((channel) => ({
+    //   channelId: channel.id,
+    //   count: channel.subscriberCountPerDay.forEach((x) => x),
+
+    //   //day: channel.subscriberCountPerDay.day,
+    // }));
+    //res.status(200).send(favChannelWithSubscribers);
   } catch (e) {
     console.log(e.message);
     res.status(500).send(e);
@@ -150,3 +187,5 @@ router.get("/favoriteChannels", authMiddleware, async (req, res) => {
 //no favorite? return message
 
 module.exports = router;
+
+//.then({ include: [Subscriber], where: { channelId: channel.id } })
