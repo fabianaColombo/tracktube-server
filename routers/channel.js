@@ -186,7 +186,32 @@ router.get("/favoriteCheckAndUpdate", authMiddleware, async (req, res) => {
         });
       }
     }
-    res.status(200).send({ message: "ok" });
+
+    const favoriteChannelsWithSubscribers = await Channel.findAll({
+      where: { id: favoriteChannelIds },
+      include: [Subscriber],
+    });
+    console.log(
+      "all channels and subscribers",
+      favoriteChannelsWithSubscribers
+    );
+
+    const susbcriberCountArray = favoriteChannelsWithSubscribers.map((ch) =>
+      ch.subscriberCountPerDays.map((sub) => (sub.day, sub.count))
+    );
+    console.log(susbcriberCountArray);
+
+    const favoriteWithSubscriber = favoriteChannelsWithSubscribers.map(
+      (ch) => ({
+        id: ch.id,
+        name: ch.name,
+        data: ch.subscriberCountPerDays.map((sub) => ({
+          x: Date.parse(sub.day),
+          y: sub.count,
+        })),
+      })
+    );
+    res.status(200).send({ message: "ok", favoriteWithSubscriber });
   } catch (e) {
     console.log(e.message);
     res.status(500).send(e.message);
