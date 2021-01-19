@@ -33,6 +33,7 @@ router.get("/explore/:id1/:id2/:id3", async (req, res, next) => {
       data: [{ x: day, y: parseInt(item.statistics.subscriberCount) }],
       id: item.id,
     }));
+
     res.status(200).send(data);
     console.log(data);
   } catch (e) {
@@ -227,119 +228,58 @@ router.get("/favoriteChannels", authMiddleware, async (req, res) => {
       order: [["createdAt", "DESC"]],
       include: [{ model: Channel }],
     });
-    //console.log("favorite found in favorite check?", favorites);
 
-    const favoriteChannelIds = favorites.map((f) => f.channel.id);
+    const favoriteChannelIds = favorites.map((f) => f.channel.youtubeId);
 
-    //console.log("fav channel ids", favoriteChannelIds);
-
-    const favoriteChannelsWithSubscribers = await Channel.findAll({
-      where: { id: favoriteChannelIds },
-      include: [Subscriber],
-    });
-    console.log(
-      "all channels and subscribers",
-      favoriteChannelsWithSubscribers
+    const getChannel = await Axios.get(
+      `${CHANNEL_API}?part=snippet%2Cstatistics&id=${favoriteChannelIds[0]}&id=${favoriteChannelIds[1]}&id=${favoriteChannelIds[2]}&key=${KEY}`
     );
+    //console.log("api response", getChannel.data);
 
-    const susbcriberCountArray = favoriteChannelsWithSubscribers.map((ch) =>
-      ch.subscriberCountPerDays.map((sub) => (sub.day, sub.count))
-    );
-    console.log(susbcriberCountArray);
+    const favoriteChannelsFromAPI = getChannel.data.items.map((channel) => ({
+      youtubeId: channel.id,
+      name: channel.snippet.title,
+      country: channel.snippet.country,
+      created: channel.snippet.publishedAt.split("T")[0],
+      susbcriberCount: channel.statistics.subscriberCount,
+      videoUploads: channel.statistics.videoCount,
+      totalViews: channel.statistics.viewCount,
+    }));
 
-    const favoriteWithSubscriber = favoriteChannelsWithSubscribers.map(
-      (ch) => ({
-        id: ch.id,
-        name: ch.name,
-        data: ch.subscriberCountPerDays.map((sub) => ({
-          x: Date.parse(sub.day),
-          y: sub.count,
-        })),
-      })
-    );
-
-    //console.log("favorite channels with subscribers", favoriteWithSubscriber);
-
-    res.status(200).send({ message: "ok", favoriteWithSubscriber });
+    res.status(200).send({ message: "ok", favoriteChannelsFromAPI });
   } catch (e) {
     console.log(e.message);
     res.status(500).send(e.message);
   }
-
-  // const favoriteChannels = favorites.map((fav) => ({
-  //   favoriteId: fav.id,
-  //   id: fav.channel.id,
-  //   channelName: fav.channel.name,
-  //   created: fav.channel.created,
-  //   country: fav.channel.country,
-  //   youtubeId: fav.channel.youtubeId,
-  // }));
 });
 
-router.get("/channelAndSubscribers/:id", authMiddleware, async (req, res) => {
+router.get("/userChannel/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
 
   try {
-    let idC = channel.id;
-    console.log("idC", idC);
-    console.log("userID", req.user.id);
+    const getChannel = await Axios.get(
+      `${CHANNEL_API}?part=snippet%2Cstatistics&id=${id}&key=${KEY}`
+    );
+    console.log("api response", getChannel.data);
 
-    let subscriberToday = await Subscriber.findOne({
-      where: { day: today, channelId: idC },
-    });
+    const channelFromAPI = getChannel.data.items.map((channel) => ({
+      youtubeId: channel.id,
+      name: channel.snippet.title,
+      country: channel.snippet.country,
+      created: channel.snippet.publishedAt.split("T")[0],
+      susbcriberCount: channel.statistics.subscriberCount,
+      videoUploads: channel.statistics.videoCount,
+      totalViews: channel.statistics.viewCount,
+    }));
 
-    console.log("subscriber today already in DB", subscriberToday);
-
-    if (!subscriberToday) {
-      const getSubscriberCount = await Axios.get(
-        `${CHANNEL_API}?part=snippet%2Cstatistics&id=${id}&key=${KEY}`
-      );
-      console.log(
-        "api response for subscriber today",
-        getSubscriberCount.data.items[0].statistics.subscriberCount
-      );
-
-      subscriberToday = await Subscriber.create({
-        channelId: idC,
-        count: getSubscriberCount.data.items[0].statistics.subscriberCount,
-        day: today,
-      });
-    }
-
-    let subscribers = await Subscriber.findAll({
-      where: { userId: { [Op.eq]: req.user.id } },
-      order: [["createdAt", "DESC"]],
-      include: [Channel],
-    });
-
-    res.status(200).send(favoriteChannels);
+    res.status(200).send({ message: "ok", channelFromAPI });
   } catch (e) {
     console.log(e.message);
     res.status(500).send(e.message);
   }
 });
 
-// const data = getChannel.data.items.map((item) => ({
-//   name: item.snippet.title,
-//   data: [{ x: day, y: parseInt(item.statistics.subscriberCount) }],
-//   id: item.id,
-// }));
-
-// const favChannel = favorites.map((fav) => fav.channel.id);
-
-// let channels = await Channel.findAll({
-//   where: { id: favChannel },
-//   include: Subscriber,
-// });
-
-// let subscribers = await Subscriber.findAll({
-//   where: { id: favChannel },
-//   include: Channel,
-// });
-
-//check if there are favorites
-//return favorite channels (name) unclude subscriberPerDay table with count and day
-//make sure they are returned in the right format ["name", "count", "day"]
 //no favorite? return message
+// id invalid? send error
 
 module.exports = router;
