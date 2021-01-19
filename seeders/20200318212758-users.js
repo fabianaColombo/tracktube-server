@@ -18,7 +18,7 @@ module.exports = {
         {
           name: "dummy",
           email: "a@a.com",
-          youtubeId: "UCrOQBmDjLa0QMNCgiUr4DPw",
+          youtubeId: "UC7jAvyBBdhKuhkg_vS44McQ",
           password: bcrypt.hashSync("a", SALT_ROUNDS),
           createdAt: new Date(),
           updatedAt: new Date(),
