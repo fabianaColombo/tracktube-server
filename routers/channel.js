@@ -194,36 +194,60 @@ router.get("/favoriteCheckAndUpdate", authMiddleware, async (req, res) => {
 });
 
 router.get("/favoriteChannels", authMiddleware, async (req, res) => {
-  const favorites = await Favorite.findAll({
-    limit: 3,
-    where: { userId: { [Op.eq]: req.user.id } },
-    order: [["createdAt", "DESC"]],
-    include: [{ model: Channel }],
-  });
-  console.log("favorite found in favorite check?", favorites);
+  try {
+    const favorites = await Favorite.findAll({
+      limit: 3,
+      where: { userId: { [Op.eq]: req.user.id } },
+      order: [["createdAt", "DESC"]],
+      include: [{ model: Channel }],
+    });
+    //console.log("favorite found in favorite check?", favorites);
 
-  const favoriteChannels = favorites.map((fav) => ({
-    favoriteId: fav.id,
-    id: fav.channel.id,
-    channelName: fav.channel.name,
-    created: fav.channel.created,
-    country: fav.channel.country,
-    youtubeId: fav.channel.youtubeId,
-  }));
+    const favoriteChannelIds = favorites.map((f) => f.channel.id);
 
-  const favoriteChannelIds = favorites.map((f) => f.channel.id);
-  // const fav0 = channelIds[0];
-  // const fav1 = channelIds[1];
-  // const fav2 = channelIds[2];
-  //console.log(fav0, fav1, fav2);
+    //console.log("fav channel ids", favoriteChannelIds);
 
-  // let favoriteChannelYoutubeIds = favorites.map((f) => f.channel.youtubeId);
-  //console.log(youtubeIds);
+    const favoriteChannelsWithSubscribers = await Channel.findAll({
+      where: { id: favoriteChannelIds },
+      include: [Subscriber],
+    });
+    console.log(
+      "all channels and subscribers",
+      favoriteChannelsWithSubscribers
+    );
 
-  const channelsWithSubscribersToday = await Subscriber.findAll({
-    where: { day: today },
-    channelId: favoriteChannelIds,
-  });
+    const susbcriberCountArray = favoriteChannelsWithSubscribers.map((ch) =>
+      ch.subscriberCountPerDays.map((sub) => (sub.day, sub.count))
+    );
+    console.log(susbcriberCountArray);
+
+    const favoriteWithSubscriber = favoriteChannelsWithSubscribers.map(
+      (ch) => ({
+        id: ch.id,
+        name: ch.name,
+        data: ch.subscriberCountPerDays.map((sub) => ({
+          x: Date.parse(sub.day),
+          y: sub.count,
+        })),
+      })
+    );
+
+    //console.log("favorite channels with subscribers", favoriteWithSubscriber);
+
+    res.status(200).send({ message: "ok", favoriteWithSubscriber });
+  } catch (e) {
+    console.log(e.message);
+    res.status(500).send(e.message);
+  }
+
+  // const favoriteChannels = favorites.map((fav) => ({
+  //   favoriteId: fav.id,
+  //   id: fav.channel.id,
+  //   channelName: fav.channel.name,
+  //   created: fav.channel.created,
+  //   country: fav.channel.country,
+  //   youtubeId: fav.channel.youtubeId,
+  // }));
 });
 
 router.get("/channelAndSubscribers/:id", authMiddleware, async (req, res) => {
