@@ -1,5 +1,6 @@
 const Axios = require("axios");
-const { KEY, CHANNEL_API } = require("../secrets/apiKey");
+const KEY = process.env.KEY;
+const { CHANNEL_API } = require("../config/constants");
 
 const { Router } = require("express");
 const authMiddleware = require("../auth/middleware");
