@@ -15,7 +15,7 @@ const router = new Router();
 
 const today = new Date().toISOString().split("T")[0];
 
-router.get("/explore/:id1/:id2/:id3", async (req, res, next) => {
+router.get("/explore/:id1/:id2/:id3", async (req, res) => {
   try {
     const { id1, id2, id3 } = req.params;
     //console.log("this is id one", req.params);
@@ -37,8 +37,9 @@ router.get("/explore/:id1/:id2/:id3", async (req, res, next) => {
     res.status(200).send(data);
     console.log(data);
   } catch (e) {
-    next(e);
-    console.log(e.message);
+    res.status(404).send({
+      message: "Looks like you have entered one or more invalid YouTude ids",
+    });
   }
 });
 
@@ -241,7 +242,7 @@ router.get("/favoriteChannels", authMiddleware, async (req, res) => {
       name: channel.snippet.title,
       country: channel.snippet.country,
       created: channel.snippet.publishedAt.split("T")[0],
-      susbcriberCount: channel.statistics.subscriberCount,
+      subscriberCount: channel.statistics.subscriberCount,
       videoUploads: channel.statistics.videoCount,
       totalViews: channel.statistics.viewCount,
     }));
@@ -253,7 +254,7 @@ router.get("/favoriteChannels", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/userChannel/:id", authMiddleware, async (req, res) => {
+router.get("/channel/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -267,7 +268,7 @@ router.get("/userChannel/:id", authMiddleware, async (req, res) => {
       name: channel.snippet.title,
       country: channel.snippet.country,
       created: channel.snippet.publishedAt.split("T")[0],
-      susbcriberCount: channel.statistics.subscriberCount,
+      subscriberCount: channel.statistics.subscriberCount,
       videoUploads: channel.statistics.videoCount,
       totalViews: channel.statistics.viewCount,
     }));
